@@ -1,5 +1,4 @@
-import * as React from 'react';
-import { ReactElement } from 'react';
+import React, { ReactElement } from 'react';
 
 import { KeyEnum } from './KeyEnum';
 import { omit } from './util/omit';
@@ -14,37 +13,32 @@ const propsToOmit = [
   'switchBetweenSuggestions'
 ];
 
-export namespace InlineSuggest {
-  export type Props = React.HTMLProps<HTMLInputElement> & {
-    value: string;
-    haystack: any[];
-    onChange?: (e: React.FormEvent<HTMLInputElement>) => void;
-    getFn?: (obj: any) => string;
-    onMatch?: (v: string | any) => void;
-    ignoreCase?: boolean;
-    shouldRenderSuggestion?: (value: string | any) => boolean;
-    switchBetweenSuggestions?: boolean;
-  };
-
-  export type State = {
-    matchedArray: any[];
-    needle: string;
-    activeIndex: number;
-  };
+export interface Props<T = string> {
+  haystack: T[];
+  ignoreCase?: boolean;
+  switchBetweenSuggestions?: boolean;
+  value?: string;
+  getFn?(obj: T): string;
+  onChange?(e: React.FormEvent<HTMLInputElement>): void;
+  onMatch?(matchedValue: T): void;
+  shouldRenderSuggestion?(value: T): boolean;
 }
 
-export class InlineSuggest extends React.Component<
-  InlineSuggest.Props,
-  InlineSuggest.State
-> {
-  static defaultProps: InlineSuggest.Props = {
+export interface State<T> {
+  matchedArray: T[];
+  needle: string;
+  activeIndex: number;
+}
+
+export class InlineSuggest<T> extends React.Component<Props<T>, State<T>> {
+  static defaultProps: Props = {
     ignoreCase: true,
     switchBetweenSuggestions: false,
     value: '',
     haystack: []
   };
 
-  constructor(props: InlineSuggest.Props) {
+  constructor(props: Props<T>) {
     super(props);
 
     this.state = {
@@ -81,11 +75,7 @@ export class InlineSuggest extends React.Component<
       return null;
     }
 
-    return (
-      <div>
-        {`${this.props.value}${this.state.needle}`}
-      </div>
-    );
+    return <div>{`${this.props.value}${this.state.needle}`}</div>;
   }
 
   private fireOnChange = (e: React.FormEvent<HTMLInputElement>) => {

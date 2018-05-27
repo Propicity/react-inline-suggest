@@ -2,7 +2,6 @@ const path = require('path');
 const webpack = require('webpack');
 const process = require('process');
 const fs = require('fs');
-const chalk = require('chalk');
 const ForkTsCheckerPlugin = require('fork-ts-checker-webpack-plugin');
 const HtmlPlugin = require('html-webpack-plugin');
 
