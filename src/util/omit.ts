@@ -1,19 +1,17 @@
+export function omit(obj: object, keys: string[]) {
+  let target: object = {};
 
-export function omit(obj: any, keys: string[]) {
-    let target: any = {};
-    
-    for (let i in obj) { 
-        if (keys.indexOf(i) >= 0) {
-            continue; 
-        }
-
-        if (!obj.hasOwnProperty(i)) {
-            continue; 
-        }
-
-
-        target[i] = obj[i]; 
+  for (let i in obj) {
+    if (keys.indexOf(i) >= 0) {
+      continue;
     }
 
-    return target; 
+    if (!obj.hasOwnProperty(i)) {
+      continue;
+    }
+
+    target[i] = obj[i];
+  }
+
+  return target;
 }

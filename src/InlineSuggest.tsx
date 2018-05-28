@@ -1,4 +1,4 @@
-import React, { ReactElement } from 'react';
+import React from 'react';
 
 import { KeyEnum } from './KeyEnum';
 import { omit } from './util/omit';
@@ -13,15 +13,16 @@ const propsToOmit = [
   'switchBetweenSuggestions'
 ];
 
-export interface Props<T = string> {
+export interface Props<T = string> extends React.HTMLProps<HTMLInputElement> {
   haystack: T[];
+  className?: string;
   ignoreCase?: boolean;
   switchBetweenSuggestions?: boolean;
   value?: string;
   getFn?(obj: T): string;
-  onChange?(e: React.FormEvent<HTMLInputElement>): void;
+  onChange?(event: React.FormEvent<HTMLInputElement>): void;
   onMatch?(matchedValue: T): void;
-  shouldRenderSuggestion?(value: T): boolean;
+  shouldRenderSuggestion?(value: string): boolean;
 }
 
 export interface State<T> {
@@ -48,13 +49,15 @@ export class InlineSuggest<T> extends React.Component<Props<T>, State<T>> {
     };
   }
 
-  render(): ReactElement<any> {
+  render() {
+    const { className, value } = this.props;
+
     return (
-      <div className={`inline-suggest ${this.props.className}`}>
+      <div className={`inline-suggest ${className}`}>
         <input
           {...omit(this.props, propsToOmit)}
           style={{ background: 'transparent' }}
-          value={this.props.value}
+          value={value}
           onChange={this.handleOnChange}
           onBlur={this.handleOnBlur}
           onKeyDown={this.handleOnKeyDown}
@@ -66,16 +69,13 @@ export class InlineSuggest<T> extends React.Component<Props<T>, State<T>> {
   }
 
   private renderSuggestion() {
-    const { shouldRenderSuggestion, value } = this.props;
+    const { shouldRenderSuggestion, value = '' } = this.props;
 
-    if (
-      shouldRenderSuggestion !== undefined &&
-      !shouldRenderSuggestion(value)
-    ) {
-      return null;
+    if (shouldRenderSuggestion && shouldRenderSuggestion(value)) {
+      return <div>{`${value}${this.state.needle}`}</div>;
     }
 
-    return <div>{`${this.props.value}${this.state.needle}`}</div>;
+    return null;
   }
 
   private fireOnChange = (e: React.FormEvent<HTMLInputElement>) => {
@@ -94,37 +94,37 @@ export class InlineSuggest<T> extends React.Component<Props<T>, State<T>> {
       this.setState({
         needle: ''
       });
-
-      return false;
-    }
-
-    const rx = RegExp(`^${value}`, ignoreCase ? 'i' : undefined);
-    const matchedArray = haystack.filter(
-      v => (getFn === undefined ? rx.test(v) : rx.test(getFn(v)))
-    );
-
-    if (matchedArray.length > 0) {
-      const matchedStr =
-        getFn === undefined ? matchedArray[0] : getFn(matchedArray[0]);
-      const originalValue = matchedStr.substr(0, value.length);
-      const needle = matchedStr.replace(originalValue, '');
-      this.setState({
-        matchedArray,
-        needle,
-        activeIndex: 0
-      });
-
-      if (needle === '' && this.props.onMatch) {
-        this.props.onMatch(matchedArray[0]);
-      }
     } else {
-      this.setState({
-        needle: '',
-        activeIndex: 0,
-        matchedArray: []
-      });
+      const rx = RegExp(`^${value}`, ignoreCase ? 'i' : undefined);
+      const matchedArray = haystack.filter(
+        v => (getFn === undefined ? rx.test(String(v)) : rx.test(getFn(v)))
+      );
+
+      if (matchedArray.length > 0) {
+        const matchedStr =
+          getFn === undefined
+            ? String(matchedArray[0])
+            : getFn(matchedArray[0]);
+        const originalValue = matchedStr.substr(0, value.length);
+        const needle = matchedStr.replace(originalValue, '');
+        this.setState({
+          matchedArray,
+          needle,
+          activeIndex: 0
+        });
+
+        if (needle === '' && this.props.onMatch) {
+          this.props.onMatch(matchedArray[0]);
+        }
+      } else {
+        this.setState({
+          needle: '',
+          activeIndex: 0,
+          matchedArray: []
+        });
+      }
+      this.fireOnChange(e);
     }
-    this.fireOnChange(e);
   };
 
   private handleOnBlur = (e: React.FocusEvent<HTMLInputElement>) => {
@@ -198,10 +198,12 @@ export class InlineSuggest<T> extends React.Component<Props<T>, State<T>> {
 
   private setNewActiveIndex = (index: number) => {
     const { matchedArray } = this.state;
-    const { getFn, value } = this.props;
+    const { getFn, value = '' } = this.props;
 
     const matchedStr =
-      getFn === undefined ? matchedArray[index] : getFn(matchedArray[index]);
+      getFn === undefined
+        ? String(matchedArray[index])
+        : getFn(matchedArray[index]);
     const originalValue = matchedStr.substr(0, value.length);
     const needle = matchedStr.replace(originalValue, '');
 
