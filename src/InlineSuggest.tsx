@@ -94,46 +94,49 @@ export class InlineSuggest extends React.Component<
     }
   };
 
+  protected proposeOption = (value: string) => {
+      const { getFn, haystack, ignoreCase } = this.props;
+      if (value.length === 0) {
+          this.setState({
+              needle: ''
+          });
+
+          return false;
+      }
+
+      const rx = RegExp(`^${value}`, ignoreCase ? 'i' : undefined);
+      const matchedArray = haystack.filter(
+          v => (getFn === undefined ? rx.test(v) : rx.test(getFn(v)))
+      );
+
+      if (matchedArray.length > 0) {
+          const matchedStr =
+              getFn === undefined ? matchedArray[0] : getFn(matchedArray[0]);
+          const originalValue = matchedStr.substr(0, value.length);
+          const needle = matchedStr.replace(originalValue, '');
+          this.setState({
+              matchedArray,
+              needle,
+              activeIndex: 0
+          });
+
+          if (needle === '' && this.props.onMatch) {
+              this.props.onMatch(matchedArray[0]);
+          }
+      } else {
+          this.setState({
+              needle: '',
+              activeIndex: 0,
+              matchedArray: []
+          });
+      }
+  }
+
   private handleOnChange = (e: React.FormEvent<HTMLInputElement>) => {
     const { currentTarget } = e;
     const { value } = currentTarget;
-    const { getFn, haystack, ignoreCase } = this.props;
 
-    if (value.length === 0) {
-      this.fireOnChange(e);
-      this.setState({
-        needle: ''
-      });
-
-      return false;
-    }
-
-    const rx = RegExp(`^${value}`, ignoreCase ? 'i' : undefined);
-    const matchedArray = haystack.filter(
-      v => (getFn === undefined ? rx.test(v) : rx.test(getFn(v)))
-    );
-
-    if (matchedArray.length > 0) {
-      const matchedStr =
-        getFn === undefined ? matchedArray[0] : getFn(matchedArray[0]);
-      const originalValue = matchedStr.substr(0, value.length);
-      const needle = matchedStr.replace(originalValue, '');
-      this.setState({
-        matchedArray,
-        needle,
-        activeIndex: 0
-      });
-
-      if (needle === '' && this.props.onMatch) {
-        this.props.onMatch(matchedArray[0]);
-      }
-    } else {
-      this.setState({
-        needle: '',
-        activeIndex: 0,
-        matchedArray: []
-      });
-    }
+    this.proposeOption(value);
     this.fireOnChange(e);
   };
 
