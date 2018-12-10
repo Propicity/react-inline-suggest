@@ -94,7 +94,7 @@ export class InlineSuggest extends React.Component<
     }
   };
 
-  public proposeOption(value: string) {
+  public proposeOption = (value: string) => {
       const { getFn, haystack, ignoreCase } = this.props;
       if (value.length === 0) {
           this.setState({

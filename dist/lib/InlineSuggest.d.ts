@@ -24,7 +24,7 @@ export declare class InlineSuggest extends React.Component<InlineSuggest.Props, 
     render(): ReactElement<any>;
     private renderSuggestion();
     private fireOnChange;
-    proposeOption(value: string): false | undefined;
+    proposeOption: (value: string) => false | undefined;
     private handleOnChange;
     private handleOnBlur;
     private handleOnKeyDown;

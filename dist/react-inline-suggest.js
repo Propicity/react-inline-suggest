@@ -138,6 +138,37 @@ var InlineSuggest = (function (_super) {
                 _this.props.onChange(e);
             }
         };
+        _this.proposeOption = function (value) {
+            var _a = _this.props, getFn = _a.getFn, haystack = _a.haystack, ignoreCase = _a.ignoreCase;
+            if (value.length === 0) {
+                _this.setState({
+                    needle: ''
+                });
+                return false;
+            }
+            var rx = RegExp("^" + value, ignoreCase ? 'i' : undefined);
+            var matchedArray = haystack.filter(function (v) { return (getFn === undefined ? rx.test(v) : rx.test(getFn(v))); });
+            if (matchedArray.length > 0) {
+                var matchedStr = getFn === undefined ? matchedArray[0] : getFn(matchedArray[0]);
+                var originalValue = matchedStr.substr(0, value.length);
+                var needle = matchedStr.replace(originalValue, '');
+                _this.setState({
+                    matchedArray: matchedArray,
+                    needle: needle,
+                    activeIndex: 0
+                });
+                if (needle === '' && _this.props.onMatch) {
+                    _this.props.onMatch(matchedArray[0]);
+                }
+            }
+            else {
+                _this.setState({
+                    needle: '',
+                    activeIndex: 0,
+                    matchedArray: []
+                });
+            }
+        };
         _this.handleOnChange = function (e) {
             var currentTarget = e.currentTarget;
             var value = currentTarget.value;
@@ -218,37 +249,6 @@ var InlineSuggest = (function (_super) {
             return null;
         }
         return (React.createElement("div", null, "" + this.props.value + this.state.needle));
-    };
-    InlineSuggest.prototype.proposeOption = function (value) {
-        var _a = this.props, getFn = _a.getFn, haystack = _a.haystack, ignoreCase = _a.ignoreCase;
-        if (value.length === 0) {
-            this.setState({
-                needle: ''
-            });
-            return false;
-        }
-        var rx = RegExp("^" + value, ignoreCase ? 'i' : undefined);
-        var matchedArray = haystack.filter(function (v) { return (getFn === undefined ? rx.test(v) : rx.test(getFn(v))); });
-        if (matchedArray.length > 0) {
-            var matchedStr = getFn === undefined ? matchedArray[0] : getFn(matchedArray[0]);
-            var originalValue = matchedStr.substr(0, value.length);
-            var needle = matchedStr.replace(originalValue, '');
-            this.setState({
-                matchedArray: matchedArray,
-                needle: needle,
-                activeIndex: 0
-            });
-            if (needle === '' && this.props.onMatch) {
-                this.props.onMatch(matchedArray[0]);
-            }
-        }
-        else {
-            this.setState({
-                needle: '',
-                activeIndex: 0,
-                matchedArray: []
-            });
-        }
     };
     InlineSuggest.defaultProps = {
         ignoreCase: true,
